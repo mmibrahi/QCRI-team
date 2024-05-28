@@ -19,6 +19,8 @@ CREATE TABLE IF NOT EXISTS people (
 )
 ''')
 
+#girl i hope this works
+
 # Step 3: getting the students
 def getStudents(soup, url):
     table = soup.find('table')
