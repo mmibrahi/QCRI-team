@@ -4,11 +4,12 @@ import requests
 import time as t
 import sqlite3
 import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Set up logging
 logging.basicConfig(filename="log.txt", level=logging.INFO, format='%(asctime)s %(message)s')
 
-sqliteConnection = sqlite3.connect("/Users/arwaelaradi/Documents/GitHub/QCRI-team/sql.db")
+sqliteConnection = sqlite3.connect("sql.db")
 cursor = sqliteConnection.cursor()
 
 cursor.execute('''
@@ -20,8 +21,6 @@ CREATE TABLE IF NOT EXISTS people (
     otherurl varchar2(20) 
 );
 ''')
-
-#girl i hope this works
 
 # Step 3: getting the students
 def getStudents(soup, url):
@@ -94,8 +93,6 @@ def process_url(url):
             if advisor.get('name') != "Unknown":
                 people.append(advisor)
 
-    t.sleep(0.5)
-
 # Initial URLs to process
 initial_urls = [
     "https://genealogy.math.ndsu.nodak.edu/id.php?id=310782",
@@ -110,15 +107,50 @@ initial_urls = [
     "https://genealogy.math.ndsu.nodak.edu/id.php?id=217509"
 ]
 
-for url in initial_urls:
-    process_url(url)
+# Define the URL of the page with the list of advisors
+url = "https://genealogy.math.ndsu.nodak.edu/most-students.php?count=250"
 
+# Fetch the page content
+response = requests.get(url)
+response.raise_for_status()  # Ensure the request was successful
+
+# Parse the HTML content using BeautifulSoup
+soup = BeautifulSoup(response.content, 'html.parser')
+
+# Find all the advisor links in the table
+advisor_links = []
+table = soup.find('table')
+if table:
+    for row in table.find_all('tr')[1:]:  # Skip the header row
+        columns = row.find_all('td')
+        if columns:
+            advisor_link = columns[0].find('a')
+            if advisor_link and advisor_link.get('href'):
+                advisor_links.append('https://genealogy.math.ndsu.nodak.edu/' + advisor_link.get('href'))
+
+# Limit to the first 250 advisors
+advisor_links = advisor_links[:250]
+
+# Process URLs in parallel using ThreadPoolExecutor
+MAX_THREADS = 10  # Adjust based on your system's capabilities
+
+with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
+    futures = {executor.submit(process_url, url): url for url in initial_urls + advisor_links}
+    
+    for future in as_completed(futures):
+        url = futures[future]
+        try:
+            future.result()
+        except Exception as e:
+            logging.error(f"Error processing URL: {url} - {e}")
+            print(f"Error processing URL: {url} - {e}")
+
+# Insert the people into the database
 counter = 0
 for p in people:
     counter += 1
     print(counter)
     try:
-        # process_url(p.get('url'))
         sql_query = """INSERT INTO people (id, name, url) VALUES (?, ?, ?);"""
         values = (p['id'], p['name'], p['url'])
         cursor.execute(sql_query, values)
@@ -127,15 +159,12 @@ for p in people:
         # Skip if the person is already in the database
         continue
 
-# Retry the URLs that timed out
-# for url in timeout_urls:
-#     process_url(url)
-
 # Close the connection
 sqliteConnection.close()
 
 print(f"Total people processed and stored: {counter}")
 print(f"Total timeout URLs: {len(timeout_urls)}")
+
 
 # print("Unique Students:")
 # print(unique_students)
