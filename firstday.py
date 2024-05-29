@@ -8,15 +8,17 @@ import logging
 # Set up logging
 logging.basicConfig(filename="log.txt", level=logging.INFO, format='%(asctime)s %(message)s')
 
-sqliteConnection = sqlite3.connect('sql.db')
+sqliteConnection = sqlite3.connect("/Users/arwaelaradi/Documents/GitHub/QCRI-team/sql.db")
 cursor = sqliteConnection.cursor()
 
 cursor.execute('''
 CREATE TABLE IF NOT EXISTS people (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    url TEXT NOT NULL
-)
+    id varchar2(20) PRIMARY KEY,
+    name varchar2(20) NOT NULL,
+    url varchar2(20) NOT NULL,
+    othersummary varchar2(20),
+    otherurl varchar2(20) 
+);
 ''')
 
 #girl i hope this works
@@ -116,16 +118,18 @@ for p in people:
     counter += 1
     print(counter)
     try:
-        process_url(p.get('url'))
-        cursor.execute('INSERT INTO people (id, name, url) VALUES (?, ?, ?)', (p['id'], p['name'], p['url']))
+        # process_url(p.get('url'))
+        sql_query = """INSERT INTO people (id, name, url) VALUES (?, ?, ?);"""
+        values = (p['id'], p['name'], p['url'])
+        cursor.execute(sql_query, values)
         sqliteConnection.commit()
     except sqlite3.IntegrityError:
         # Skip if the person is already in the database
         continue
 
 # Retry the URLs that timed out
-for url in timeout_urls:
-    process_url(url)
+# for url in timeout_urls:
+#     process_url(url)
 
 # Close the connection
 sqliteConnection.close()

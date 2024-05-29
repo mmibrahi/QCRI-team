@@ -8,7 +8,10 @@ def get_whole_page(url):
     try:
         response = requests.get(url)
         response.raise_for_status()  # Raise HTTPError for bad responses
-        return response.text
+        soup = BeautifulSoup(response.text, "html.parser")
+        # Get text without HTML tags
+        plain_text = soup.get_text()
+        return plain_text
     except Exception as e:
         print(f"Error fetching {url}: {e}")
         return None
@@ -18,7 +21,7 @@ sqliteConnection = sqlite3.connect('sql.db')
 cursor = sqliteConnection.cursor()
 
 # Query to select all records from the people table
-cursor.execute('SELECT * FROM people')
+cursor.execute("""SELECT * FROM people;""")
 
 # Fetch all results
 results = cursor.fetchall()
@@ -27,9 +30,11 @@ results = cursor.fetchall()
 delimiter = '---PAGE BREAK---'
 
 # Process each row
+count = 0; 
 for row in results:
     name = row[1]
-    
+    count+=1
+    print(count)
     # Perform a Google search for the name
     search_query = f"{name}"
     search_results = list(search(search_query, num_results=5))
@@ -53,7 +58,7 @@ for row in results:
             cursor.execute('''
                 UPDATE people
                 SET othersummary = ?, otherurl = ?
-                WHERE name = ?
+                WHERE name = ?;
             ''', (final_page_content, final_url, name))
             
             # Commit the changes after each update
