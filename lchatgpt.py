@@ -1,7 +1,10 @@
 import sqlite3
 
-from gpt4all import GPT4All
-model = GPT4All("orca-mini-3b-gguf2-q4_0.gguf")
+# from gpt4all import GPT4All
+# model = GPT4All("orca-mini-3b-gguf2-q4_0.gguf")
+import torch
+from transformers import pipeline
+generate_text = pipeline(model="databricks/dolly-v2-3b", torch_dtype=torch.bfloat16, trust_remote_code=True, device_map="auto")
 
 # def get_completion(prompt, model="gpt-3.5-turbo"):
 #     messages = [{"role": "user", "content": prompt}]
@@ -12,8 +15,8 @@ model = GPT4All("orca-mini-3b-gguf2-q4_0.gguf")
 #     )
 #     return response.choices[0].message["content"]
 
-def get_completion(prompt, model):
-    return model.generate(prompt, temp = 0)
+# def get_completion(prompt, model):
+#     return model.generate(prompt, temp = 0)
 
 #---------------------------------------
 # Connect to the SQLite database
@@ -43,15 +46,20 @@ for row in results:
         
     for page in page_contents:
         try:
-            text = f"""{page[0:100]}"""
+            text = f"""{page}"""
             prompt_2 = f"""
-                        say hello
+                        Your task is to perform the following actions if you did not find information say hello, do not return the prompt only the data: 
+                                1 - Find the name of the person
+                                2 - Find his place of birth
+                                3 - Find any publication
+                                4 - Find his advisors and Descendants                                
                             Text: <{text}>
                             """
                 # print(page.status())
-            response = get_completion(prompt_2,model)
             print("\nCompletion for prompt :")
-            print(response)
+            res = generate_text(prompt_2)
+            print(res[0]["generated_text"])
+
         except Exception as e:
             print(f"Error processing page: {e}")
         # Print for debugging
