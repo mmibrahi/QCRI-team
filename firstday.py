@@ -112,6 +112,43 @@ initial_urls = [
 
 for url in initial_urls:
     process_url(url)
+    
+    
+
+# Define the URL of the page with the list of advisors
+url = "https://genealogy.math.ndsu.nodak.edu/most-students.php?count=250"
+
+# Fetch the page content
+response = requests.get(url)
+response.raise_for_status()  # Ensure the request was successful
+
+# Parse the HTML content using BeautifulSoup
+soup = BeautifulSoup(response.content, 'html.parser')
+
+# Find all the advisor links in the table
+advisor_links = []
+table = soup.find('table')
+if table:
+    for row in table.find_all('tr')[1:]:  # Skip the header row
+        columns = row.find_all('td')
+        if columns:
+            advisor_link = columns[0].find('a')
+            if advisor_link and advisor_link.get('href'):
+                advisor_links.append('https://genealogy.math.ndsu.nodak.edu/' + advisor_link.get('href'))
+
+# Limit to the first 250 advisors
+advisor_links = advisor_links[:250]
+
+# Define the process_url function (assuming it's a placeholder)
+def process_url(url):
+    print(f"Processing URL: {url}")
+    # Add your URL processing logic here
+
+# Call the process_url function for each advisor URL
+for link in advisor_links:
+    process_url(link)
+
+
 
 counter = 0
 for p in people:
