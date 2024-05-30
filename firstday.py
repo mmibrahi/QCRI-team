@@ -135,7 +135,7 @@ advisor_links = advisor_links[:250]
 MAX_THREADS = 10  # Adjust based on your system's capabilities
 
 with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
-    futures = {executor.submit(process_url, url): url for url in initial_urls + advisor_links}
+    futures = {executor.submit(process_url, url): url for url in initial_urls }
     
     for future in as_completed(futures):
         url = futures[future]

@@ -20,7 +20,7 @@ generate_text = pipeline(model="databricks/dolly-v2-3b", torch_dtype=torch.bfloa
 
 #---------------------------------------
 # Connect to the SQLite database
-sqliteConnection = sqlite3.connect('/Users/arwaelaradi/Documents/GitHub/QCRI-team/sql.db')
+sqliteConnection = sqlite3.connect('sql.db')
 cursor = sqliteConnection.cursor()
 # Query to select all records from the people table
 cursor.execute("""SELECT * FROM people;""")

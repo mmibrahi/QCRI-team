@@ -9,12 +9,23 @@ def get_whole_page(url):
         response = requests.get(url)
         response.raise_for_status()  # Raise HTTPError for bad responses
         soup = BeautifulSoup(response.text, "html.parser")
-        # Get text without HTML tags
         plain_text = soup.get_text()
         return plain_text
     except Exception as e:
         print(f"Error fetching {url}: {e}")
         return None
+
+
+def url_meets_criteria(url, name):
+    if "wikipedia" in url.lower():
+        return False
+    if "edu" in url.lower() or "biography" in url.lower():
+        return True
+    return False
+
+# Function to check if page content meets the criteria
+def content_meets_criteria(content, name):
+    return content.lower().count(name.lower()) >= 5
 
 # Connect to the SQLite database
 sqliteConnection = sqlite3.connect('sql.db')
@@ -30,22 +41,25 @@ results = cursor.fetchall()
 delimiter = '---PAGE BREAK---'
 
 # Process each row
-count = 0; 
+count = 0
 for row in results:
     name = row[1]
-    count+=1
+    count += 1
     print(count)
     # Perform a Google search for the name
     search_query = f"{name}"
-    search_results = list(search(search_query, num_results=5))
+    search_results = list(search(search_query, num_results=2)) 
     
     if search_results:
         page_contents = []
         urls = []
 
         for url in search_results:
+            if not url_meets_criteria(url, name):
+                continue
+            
             page_content = get_whole_page(url)
-            if page_content:
+            if page_content and content_meets_criteria(page_content, name):
                 page_contents.append(page_content)
                 urls.append(url)
         
