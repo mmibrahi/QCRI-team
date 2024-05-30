@@ -1,6 +1,7 @@
 import sqlite3
 import requests
 from bs4 import BeautifulSoup
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from googlesearch import search
 
 # Function to get the whole HTML content from a URL
@@ -28,13 +29,15 @@ results = cursor.fetchall()
 
 # Delimiter to join and split the URLs and page contents
 delimiter = '---PAGE BREAK---'
+MAX_THREADS = 10
 
 # Process each row
-count = 0; 
+count = 0
 for row in results:
     name = row[1]
-    count+=1
+    count += 1
     print(count)
+    
     # Perform a Google search for the name
     search_query = f"{name}"
     search_results = list(search(search_query, num_results=5))
@@ -43,12 +46,20 @@ for row in results:
         page_contents = []
         urls = []
 
-        for url in search_results:
-            page_content = get_whole_page(url)
-            if page_content:
-                page_contents.append(page_content)
-                urls.append(url)
-        
+        # Use ThreadPoolExecutor to fetch pages in parallel
+        with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
+            future_to_url = {executor.submit(get_whole_page, url): url for url in search_results}
+            
+            for future in as_completed(future_to_url):
+                url = future_to_url[future]
+                try:
+                    page_content = future.result()
+                    if page_content:
+                        page_contents.append(page_content)
+                        urls.append(url)
+                except Exception as e:
+                    print(f"Error processing {url}: {e}")
+
         if page_contents and urls:
             # Join the page contents and URLs with a delimiter
             final_page_content = delimiter.join(page_contents)
@@ -68,5 +79,6 @@ for row in results:
 # Close the connection
 cursor.close()
 sqliteConnection.close()
+
 
 #https://www.google.com/search?q=ibn+sina
