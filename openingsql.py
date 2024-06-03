@@ -2,6 +2,7 @@ import sqlite3
 import requests
 from bs4 import BeautifulSoup
 from googlesearch import search
+# test
 
 # Function to get the whole HTML content from a URL
 def get_whole_page(url):
