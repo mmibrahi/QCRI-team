@@ -72,14 +72,25 @@
 
 # print(response)
 
-import requests
-from bs4 import BeautifulSoup
 
-url = "https://genealogy.math.ndsu.nodak.edu/id.php?id=310782"
+import torch
+from transformers import pipeline
+generate_text = pipeline(model="databricks/dolly-v2-3b", torch_dtype=torch.bfloat16, trust_remote_code=True, device_map="auto")
 
-response = requests.get(url)
 
-s = BeautifulSoup(response.content, 'html.parser')
-names = s.find_all('h2')
-for name in names:
-    print(name)
+
+text = f""" """
+
+input_text = f"""  Your task is to perform the following actions if you did not find information say hello, do not return the prompt only the data: 
+                                1 - Find the name of the person
+                                2 - Find his place of birth
+                                3 - Find any publication
+                                4 - Find his advisors and Descendants
+                                5 - find any other information you think is relevant about the person's professional life 
+                                
+                                Text: {text}""",
+   
+
+
+res = generate_text(input_text)
+print(res[0]["generated_text"])
