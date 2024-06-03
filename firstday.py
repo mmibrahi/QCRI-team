@@ -58,24 +58,31 @@ visited_urls = set()
 timeout_urls = []
 
 # Function to process a URL and extract students and advisors
-def process_url(url):
+def process_url(url, retries=3, delay=5):
     if url in visited_urls:
         return  # Skip if URL already visited
     
     visited_urls.add(url)
 
-    try:
-        r = requests.get(url, timeout=10)  
-        r.raise_for_status()  # Raise an HTTPError for bad responses
-        soup = BeautifulSoup(r.content, 'html5lib')
-    except requests.exceptions.Timeout:
-        logging.error(f"Timeout error for URL: {url}")
-        print(f"Timeout error for URL: {url}")
+    for i in range(retries):
+        try:
+            r = requests.get(url, timeout=10)  
+            r.raise_for_status()  # Raise an HTTPError for bad responses
+            soup = BeautifulSoup(r.content, 'html5lib')
+            break
+        except requests.exceptions.Timeout:
+            logging.error(f"Timeout error for URL: {url}. Retrying in {delay} seconds...")
+            print(f"Timeout error for URL: {url}. Retrying in {delay} seconds...")
+            t.sleep(delay)  # Wait for some time before retrying
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Request error for URL: {url} - {e}")
+            print(f"Request error for URL: {url} - {e}")
+            return
+    else:
+        # We've run out of retries
+        logging.error(f"Failed to process URL: {url} after {retries} retries.")
+        print(f"Failed to process URL: {url} after {retries} retries.")
         timeout_urls.append(url)
-        return
-    except requests.exceptions.RequestException as e:
-        logging.error(f"Request error for URL: {url} - {e}")
-        print(f"Request error for URL: {url} - {e}")
         return
 
     # Get students and advisors from the current URL
@@ -104,9 +111,23 @@ initial_urls = [
     "https://genealogy.math.ndsu.nodak.edu/id.php?id=287479",
     "https://genealogy.math.ndsu.nodak.edu/id.php?id=223724",
     "https://genealogy.math.ndsu.nodak.edu/id.php?id=287480",
-    "https://genealogy.math.ndsu.nodak.edu/id.php?id=217509"
+    "https://genealogy.math.ndsu.nodak.edu/id.php?id=287481",
 ]
+    
+    # Number of URLs to generate
+num_urls = 30000
 
+# Get the last URL in the list
+last_url = initial_urls[-1]
+
+# Extract the id from the last URL
+last_id = int(last_url.split('=')[-1])
+
+# Generate new URLs by incrementing the id
+for i in range(1, num_urls + 1):
+    new_id = last_id + i
+    new_url = f"https://genealogy.math.ndsu.nodak.edu/id.php?id={new_id}"
+    initial_urls.append(new_url)   
 # Define the URL of the page with the list of advisors
 url = "https://genealogy.math.ndsu.nodak.edu/most-students.php?count=250"
 
@@ -135,7 +156,7 @@ advisor_links = advisor_links[:250]
 MAX_THREADS = 10  # Adjust based on your system's capabilities
 
 with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
-    futures = {executor.submit(process_url, url): url for url in initial_urls + advisor_links}
+    futures = {executor.submit(process_url, url): url for url in initial_urls }
     
     for future in as_completed(futures):
         url = futures[future]
