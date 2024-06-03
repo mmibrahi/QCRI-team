@@ -1,7 +1,6 @@
 from ollama import Client
 import sqlite3
 
-# test
 
 client = Client(host = "http://127.0.0.1:11434")
 

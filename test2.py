@@ -4,7 +4,6 @@ import ssl
 from bs4 import BeautifulSoup
 from googlesearch import search
 ssl._create_default_https_context = ssl._create_unverified_context
-
 # Function to get the whole HTML content from a URL along with image URLs
 def get_whole_page(url):
     try:
