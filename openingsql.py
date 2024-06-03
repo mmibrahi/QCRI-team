@@ -92,9 +92,5 @@ for row in results:
 
 # Close the connection
 cursor.close()
-<<<<<<< HEAD
-sqliteConnection.close()
 
-=======
 sqliteConnection.close()
->>>>>>> 931e5fd30956f24080d04ce617c55a178184f29f
