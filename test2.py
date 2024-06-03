@@ -1,6 +1,7 @@
 import sqlite3
 import requests
 import ssl
+import os
 from bs4 import BeautifulSoup
 from googlesearch import search
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -20,6 +21,22 @@ def get_whole_page(url):
         print(f"Error fetching {url}: {e}")
         return None, None
 
+# Function to save images
+def save_images(image_urls,folder_name="image_directory"):
+    if not os.path.exists(folder_name):
+        os.makedirs(folder_name)
+    
+    for i, url in enumerate(image_urls):
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+            
+            with open(os.path.join("image_directory", f"image_{i}.jpg"), "wb") as f:
+                f.write(response.content)
+                print(f"Saved image_{i}.jpg")
+
+        except Exception as e:
+            print(f"Error saving image from {url}: {e}")
 
 def url_meets_criteria(url, name):
     if "wikipedia" in url.lower():
@@ -70,7 +87,6 @@ for row in results:
                 page_contents.append(page_content)
                 image_urls.extend(img_urls)
                 urls.append(url)
-                print(page_content)
         
         if page_contents and urls:
             # Join the page contents and URLs with a delimiter
@@ -87,6 +103,12 @@ for row in results:
             
             # Commit the changes after each update
             sqliteConnection.commit()
+             # Save images
+            if final_image_urls:
+                image_urls_list = final_image_urls.split(delimiter)
+                save_images(image_urls_list, "image_directory")
+                
+            print(f"Updated {name}")
             print(f"Updated {name}")
 
 # Close the connection

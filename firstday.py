@@ -19,7 +19,8 @@ CREATE TABLE IF NOT EXISTS people (
     name varchar2(20) NOT NULL,
     url varchar2(20) NOT NULL,
     othersummary varchar2(20),
-    otherurl varchar2(20) 
+    otherurl varchar2(20),
+    imageurls varchar2(200) 
 );
 ''')
 
@@ -116,7 +117,7 @@ initial_urls = [
 ]
     
     # Number of URLs to generate
-num_urls = 30000
+num_urls = 2
 
 # Get the last URL in the list
 last_url = initial_urls[-1]

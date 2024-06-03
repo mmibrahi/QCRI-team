@@ -41,7 +41,7 @@ for row in results:
                                 3. Find the advisors and descendants:
                                 4. Find any additional relevant information about the person:
 
-                                Format your response as follows:
+                                Format your response as a json file and save it:
                                 Name: {name}
                                 Birthdate: <birth place and date>
                                 Publication: <short summary of publication>
