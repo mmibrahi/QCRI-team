@@ -33,7 +33,9 @@ for row in results:
         othersummary = othersummary.replace("\n", " ")
         try:
                 text = f"""{othersummary}"""
-                prompt =  f"""Your task is to extract specific information from the provided "text". Follow the instructions carefully and provide only the relevant data regarding {name} in the specified format.
+                prompt =  f"""Your task is to extract specific information from the provided "text". Follow the instructions carefully and provide only the relevant data regarding {name} in the specified format
+                                only display the json format answer, do not display anything before or after the answer:
+
                                 Text = {text}
                                 Instructions:
                                 1. Find the birthdate (date of birth) and place of birth:
@@ -47,7 +49,10 @@ for row in results:
                                 Publication: <short summary of publication>
                                 Advisors: <number or list of Advisors>
                                 Descendants: <number or list of Descendants>
-                                Extra information: <additional relevant information>                
+                                Extra information: <additional relevant information>   
+
+                                only display the json format answer, do not display anything before or after the answer:
+             
                                 """
                 response = client.chat(model = "llama3", messages = [{
                     'role': 'user',

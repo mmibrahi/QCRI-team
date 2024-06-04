@@ -6,7 +6,6 @@ import sqlite3
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-
 # Set up logging
 logging.basicConfig(filename="log.txt", level=logging.INFO, format='%(asctime)s %(message)s')
 
