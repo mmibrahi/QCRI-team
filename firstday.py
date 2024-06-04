@@ -51,7 +51,7 @@ def getAdvisors(soup, url):
                     href = a_tag.get('href')
                     advisor_id = href.split('=')[-1]
                     advisor_url = url.split('?')[0] + f'?id={advisor_id}'
-                    advisors.append({'id': advisor_url, 'name': advisor_name, 'url': advisor_url})
+                    advisors.append({'id': advisor_id, 'name': advisor_name, 'url': advisor_url})
     return advisors
 
 # Global data structures to hold unique students and advisors
@@ -158,7 +158,7 @@ advisor_links = advisor_links[:250]
 MAX_THREADS = 10  # Adjust based on your system's capabilities
 
 with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
-    futures = {executor.submit(process_url, url): url for url in initial_urls }
+    futures = {executor.submit(process_url, url): url for url in initial_urls  }
     
     for future in as_completed(futures):
         url = futures[future]

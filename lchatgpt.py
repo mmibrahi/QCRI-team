@@ -45,7 +45,8 @@ for row in results:
                                 Name: {name}
                                 Birthdate: <birth place and date>
                                 Publication: <short summary of publication>
-                                Students: <number or list of students>
+                                Advisors: <number or list of Advisors>
+                                Descendants: <number or list of Descendants>
                                 Extra information: <additional relevant information>                
                                 """
                 response = client.chat(model = "llama3", messages = [{
