@@ -1,7 +1,6 @@
 import sqlite3
 import requests
 import ssl
-import face_recognition
 import os
 from bs4 import BeautifulSoup
 from googlesearch import search

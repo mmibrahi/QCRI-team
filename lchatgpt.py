@@ -1,5 +1,8 @@
 from ollama import Client
 import sqlite3
+import json
+import requests
+from bs4 import BeautifulSoup
 
 
 client = Client(host = "http://127.0.0.1:11434")
@@ -35,10 +38,9 @@ for row in results:
                 text = f"""{othersummary}"""
                 prompt =  f"""Your task is to extract specific information from the provided "text". Follow the instructions carefully and provide only the relevant data regarding {name} in the specified format
                                 only display the json format answer, do not display anything before or after the answer:
-
                                 Text = {text}
                                 Instructions:
-                                1. Find the birthdate (date of birth) and place of birth:
+                                1. Find the birthdate (date of birth) and place of birth, the bithdate should be in the format of "Month Day, Year" (e.g., January 1, 2000) and the place of birth should be in the format of "City, Country" (e.g., New York City, USA):
                                 2. Find any publication:
                                 3. Find the advisors and descendants:
                                 4. Find any additional relevant information about the person:

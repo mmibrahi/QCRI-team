@@ -23,10 +23,9 @@ def get_whole_page(url):
 
 
 def url_meets_criteria(url, name):
-    if "wikipedia" in url.lower():
+    if "wikipedia" in url.lower() or "genealogy" in url.lower():
+        
         return False
-    # if "edu" in url.lower() or "biography" in url.lower():
-    #     return True
     return True
 
 # Function to check if page content meets the criteria

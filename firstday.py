@@ -5,6 +5,61 @@ import time as t
 import sqlite3
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import json
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
+import urllib.parse
+password = urllib.parse.quote_plus('d9nuj8LRC987XR5')
+
+uri = "mongodb+srv://ansamr76:{password}@qcri.94ahukm.mongodb.net/?retryWrites=true&w=majority&appName=QCRI"
+
+# Create a new client and connect to the server
+client = MongoClient(uri, server_api=ServerApi('1'))
+
+# Send a ping to confirm a successful connection
+try:
+    client.admin.command('ping')
+    print("Pinged your deployment. You successfully connected to MongoDB!")
+except Exception as e:
+    print(e)
+
+
+
+#### json file
+
+def extract_info(url):
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    # Find name
+    name = soup.find('h2').text
+
+    # Find birthdate and place of birth
+    birth_info = soup.find('span').text
+ 
+    # Find publications
+    publications = [pub.text for pub in soup.find_all('div', {'class': 'publication'})]
+
+    # Find advisors and descendants
+    advisors = [advisor.text for advisor in soup.find_all('div', {'class': 'advisor'})]
+    descendants = [descendant.text for descendant in soup.find_all('div', {'class': 'descendant'})]
+
+    # Find additional information
+    additional_info = soup.find('div', {'id': 'additional_info'}).text
+
+    # Save the information in a dictionary
+    info = {
+        'name': name,
+        'birthdate': birthdate,
+        'place_of_birth': place_of_birth,
+        'publications': publications,
+        'advisors': advisors,
+        'descendants': descendants,
+        'additional_info': additional_info,
+    }
+
+    # Save the dictionary in a JSON file
+    with open('information.json', 'w') as f:
+        json.dump(info, f)
 
 # Set up logging
 logging.basicConfig(filename="log.txt", level=logging.INFO, format='%(asctime)s %(message)s')
@@ -103,20 +158,12 @@ def process_url(url, retries=3, delay=5):
 
 # Initial URLs to process
 initial_urls = [
-    "https://genealogy.math.ndsu.nodak.edu/id.php?id=310782",
-    "https://genealogy.math.ndsu.nodak.edu/id.php?id=298616",
-    "https://genealogy.math.ndsu.nodak.edu/id.php?id=287468",
-    "https://genealogy.math.ndsu.nodak.edu/id.php?id=287466",
-    "https://genealogy.math.ndsu.nodak.edu/id.php?id=230926",
-    "https://genealogy.math.ndsu.nodak.edu/id.php?id=287478",
-    "https://genealogy.math.ndsu.nodak.edu/id.php?id=287479",
-    "https://genealogy.math.ndsu.nodak.edu/id.php?id=223724",
-    "https://genealogy.math.ndsu.nodak.edu/id.php?id=287480",
-    "https://genealogy.math.ndsu.nodak.edu/id.php?id=287481",
+    "https://genealogy.math.ndsu.nodak.edu/id.php?id=0",
+    
 ]
     
     # Number of URLs to generate
-num_urls = 2
+num_urls = 313664
 
 # Get the last URL in the list
 last_url = initial_urls[-1]
@@ -128,6 +175,7 @@ last_id = int(last_url.split('=')[-1])
 for i in range(1, num_urls + 1):
     new_id = last_id + i
     new_url = f"https://genealogy.math.ndsu.nodak.edu/id.php?id={new_id}"
+    extract_info(new_url)
     initial_urls.append(new_url)   
 # Define the URL of the page with the list of advisors
 url = "https://genealogy.math.ndsu.nodak.edu/most-students.php?count=250"
