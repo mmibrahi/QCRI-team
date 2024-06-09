@@ -19,14 +19,16 @@ conn = psycopg2.connect(dbname="postgres",
 cursor = conn.cursor()
 
 cursor.execute('''
+DROP TABLE IF EXISTS people;
+
 CREATE TABLE IF NOT EXISTS people (
-    id varchar(20) PRIMARY KEY,
-    name varchar(20) NOT NULL,
-    url varchar(20) NOT NULL,
+    id varchar(50) PRIMARY KEY,
+    name varchar(50) NOT NULL,
+    url varchar(50) NOT NULL,
     students varchar[],
     advisors varchar[],
-    othersummary varchar(20),
-    otherurl varchar(20),
+    othersummary varchar(50),
+    otherurl varchar(50),
     imageurls varchar(200)    
 );
 ''')
@@ -44,7 +46,7 @@ def getStudents(soup, url):
         student_id = student_element['href'].split('=')[-1]
         # student_name = student_element.text.strip()
         # student_url = url.split('?')[0] + f'?id={student_id}'
-        return {'id': student_id}
+        return student_id
 
     return [parse_student_element(student) for student in students]
 
@@ -62,7 +64,7 @@ def getAdvisors(soup, url):
                     href = a_tag.get('href')
                     advisor_id = href.split('=')[-1]
                     # advisor_url = url.split('?')[0] + f'?id={advisor_id}'
-                    advisors.append({'id': advisor_id})
+                    advisors.append(advisor_id)
     return advisors
 
 def process_url(url, retries=3, delay=5):
@@ -72,9 +74,9 @@ def process_url(url, retries=3, delay=5):
             r.raise_for_status()  # Raise an HTTPError for bad responses
             soup = BeautifulSoup(r.content, 'html5lib')
             scientist_id = url.split('=')[-1]
-            scientist_name = soup.find('h2').text
-            students = json.dumps(getStudents(soup, url))
-            advisors = json.dumps(getAdvisors(soup, url))
+            scientist_name = soup.find('h2').text.replace("\n"," ")
+            students = getStudents(soup, url)
+            advisors = getAdvisors(soup, url)
             sql_query = """INSERT INTO people (id, name, url,students,advisors) VALUES (%s,%s,%s,%s,%s);"""
             values = (scientist_id, scientist_name, url, students, advisors)
             cursor.execute(sql_query,values)
@@ -99,11 +101,11 @@ def process_url(url, retries=3, delay=5):
 
 
 initial_urls = [
-    "https://genealogy.math.ndsu.nodak.edu/id.php?id=2",
+    "https://genealogy.math.ndsu.nodak.edu/id.php?id=1",
 ]
     
     # Number of URLs to generate
-num_urls = 10
+num_urls = 30000
 
 # Get the last URL in the list
 last_url = initial_urls[-1]
@@ -112,12 +114,14 @@ last_url = initial_urls[-1]
 last_id = int(last_url.split('=')[-1])
 
 # Generate new URLs by incrementing the id
-for i in range(1, num_urls + 1):
+for i in range(1, num_urls ):
     new_id = last_id + i
     new_url = f"https://genealogy.math.ndsu.nodak.edu/id.php?id={new_id}"
     initial_urls.append(new_url)   
 
 # with ThreadPoolExecutor(max_workers=5) as executor:
-for url in initial_urls:
-    process_url(url)
-    
+MAX_THREADS = 10
+with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
+    futures = [executor.submit(process_url, url) for url in initial_urls]
+
+print("done")
