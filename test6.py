@@ -12,7 +12,7 @@ logging.basicConfig(filename="log.txt", level=logging.INFO, format='%(asctime)s 
 
 conn = psycopg2.connect(dbname="postgres",
                         user="postgres",
-                        password="1245!Taha",
+                        password="6uGEFkYvuBJLQMP",
                         host="localhost",
                         port="5432")
 
@@ -81,6 +81,7 @@ def process_url(url, retries=3, delay=5):
             values = (scientist_id, scientist_name, url, students, advisors)
             cursor.execute(sql_query,values)
             conn.commit()
+            print(f"Processed URL: {url}")
             break
         except requests.exceptions.Timeout:
             logging.error(f"Timeout error for URL: {url}. Retrying in {delay} seconds...")
@@ -117,6 +118,7 @@ last_id = int(last_url.split('=')[-1])
 for i in range(1, num_urls ):
     new_id = last_id + i
     new_url = f"https://genealogy.math.ndsu.nodak.edu/id.php?id={new_id}"
+    print(new_url)
     initial_urls.append(new_url)   
 
 # with ThreadPoolExecutor(max_workers=5) as executor:
