@@ -27,8 +27,8 @@ def get_whole_page(url):
         plain_text = soup.get_text()
 
         # Extract image URLs
-        img_urls = [img["src"] for img in soup.find_all("img")]
-        return plain_text, img_urls
+        # img_urls = [img["src"] for img in soup.find_all("img")]
+        return plain_text
     except Exception as e:
         print(f"Error fetching {url}: {e}")
         return None, None
@@ -53,11 +53,12 @@ def get_whole_page(url):
 
 # Function to check if URL meets criteria
 def url_meets_criteria(url, name):
-    if "wikipedia" in url.lower() or "genealogy" in url.lower() or "amazon" in url.lower():
+    name = name.split(" ")
+    if "wikipedia" in url.lower() or "genealogy" in url.lower() or "amazon" in url.lower() or "linkedin" in url.lower() or "facebook" in url.lower() or "twitter" in url.lower() or "instagram" in url.lower():
         return False
-    if "bio" in url.lower() or "edu" in url.lower():
-        return True
-    return False
+    # if "bio" in url.lower() or "edu" in url.lower() or (name[0].lower() in url.lower() and name[-1].lower() in url.lower()):
+    #     return True
+    return True
 
 def content_meets_criteria(content, name):
     return content.lower().count(name.lower()) >= 2
@@ -89,7 +90,7 @@ def main():
 
             # Perform a Google search for the name
             query = f"{name}"
-            search_results = list(search(query, num=10, stop=10, pause=2))
+            search_results = list(search(query, num=15, stop=15, pause=2))
 
             if search_results:
                 page_contents = []
@@ -102,9 +103,7 @@ def main():
 
                     page_content = get_whole_page(url)
 
-                    if page_content:
-                        if not content_meets_criteria(page_content, name):
-                            continue
+                    if page_content and content_meets_criteria(page_content, name):
                         page_contents.append(page_content)
                         # image_urls.extend(img_urls)
                         # for image_url in img_urls:
