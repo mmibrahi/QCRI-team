@@ -1,4 +1,4 @@
-import sqlite3
+
 import requests
 import ssl
 import face_recognition
@@ -6,9 +6,17 @@ import os
 import cv2
 from bs4 import BeautifulSoup
 from googlesearch import search
+import psycopg2
 # comment
 # Set SSL context to unverified
 ssl._create_default_https_context = ssl._create_unverified_context
+conn = psycopg2.connect(dbname="postgres",
+                        user="postgres",
+                        password="1245!Taha",
+                        host="localhost",
+                        port="5432")
+
+cursor = conn.cursor()
 
 # Function to get the whole HTML content from a URL along with image URLs
 def get_whole_page(url):
@@ -26,39 +34,41 @@ def get_whole_page(url):
         return None, None
 
 # Function to save images with an offset to avoid overriding
-def save_images( image_urls ,folder_name="image_directory"):
-    if not os.path.exists(folder_name):
-        os.makedirs(folder_name)
+# def save_images( image_urls ,folder_name="image_directory"):
+#     if not os.path.exists(folder_name):
+#         os.makedirs(folder_name)
 
-    for i, url in enumerate(image_urls):
-        try:
-            response = requests.get(url)
-            response.raise_for_status()
+#     for i, url in enumerate(image_urls):
+#         try:
+#             response = requests.get(url)
+#             response.raise_for_status()
 
-            with open(os.path.join(folder_name, f"image_{i}.jpg"), "wb") as f:
-                f.write(response.content)
-                print(f"Saved image_{i}.jpg")
-        except Exception as e:
-            print(f"Error saving image from {url}: {e}")
-    return os.listdir(folder_name)
+#             with open(os.path.join(folder_name, f"image_{i}.jpg"), "wb") as f:
+#                 f.write(response.content)
+#                 print(f"Saved image_{i}.jpg")
+#         except Exception as e:
+#             print(f"Error saving image from {url}: {e}")
+#     return os.listdir(folder_name)
 
 
 # Function to check if URL meets criteria
 def url_meets_criteria(url, name):
-    if "wikipedia" in url.lower() or "genealogy" in url.lower():
+    if "wikipedia" in url.lower() or "genealogy" in url.lower() or "amazon" in url.lower():
         return False
-    if "edu" in url.lower() or "biograph" in url.lower() or "bio" in url.lower():
+    if "bio" in url.lower() or "edu" in url.lower():
         return True
     return False
+
+def content_meets_criteria(content, name):
+    return content.lower().count(name.lower()) >= 2
 
 # Connect to the SQLite database
 def main():
     try:
-        sqliteConnection = sqlite3.connect('sql.db')
-        cursor = sqliteConnection.cursor()
+        cursor = conn.cursor()
 
         # Query to select all records from the people table
-        cursor.execute("SELECT * FROM people;")
+        cursor.execute("SELECT * FROM people")
 
         # Fetch all results
         results = cursor.fetchall()
@@ -90,10 +100,13 @@ def main():
                     if not url_meets_criteria(url, name):
                         continue
 
-                    page_content, img_urls = get_whole_page(url)
+                    page_content = get_whole_page(url)
+
                     if page_content:
+                        if not content_meets_criteria(page_content, name):
+                            continue
                         page_contents.append(page_content)
-                        image_urls.extend(img_urls)
+                        # image_urls.extend(img_urls)
                         # for image_url in img_urls:
                         #     image = cv2.imread(image_url)
                         #     face_locations = face_recognition.face_locations(image)
@@ -108,27 +121,27 @@ def main():
                     # Join the page contents and URLs with a delimiter
                     final_page_content = delimiter.join(page_contents)
                     final_url = delimiter.join(urls)
-                    final_image_urls = delimiter.join(image_urls) if image_urls else None
-                    if image_urls:
-                        directory = save_images(image_urls, "image_directory")
-                    for image in os.listdir("/Users/arwaelaradi/Documents/GitHub/QCRI-team/image_directory"):
-                        image = face_recognition.load_image_file("/Users/arwaelaradi/Desktop/download.jpg")
-                        face_locations = face_recognition.face_locations(image)
-                            # Check if any faces were found
-                        if face_locations:
-                            print("Face detected in the image.")
+                    # final_image_urls = delimiter.join(image_urls) if image_urls else None
+                    # if image_urls:
+                    #     directory = save_images(image_urls, "image_directory")
+                    # for image in os.listdir("/Users/arwaelaradi/Documents/GitHub/QCRI-team/image_directory"):
+                    #     image = face_recognition.load_image_file("/Users/arwaelaradi/Desktop/download.jpg")
+                    #     face_locations = face_recognition.face_locations(image)
+                    #         # Check if any faces were found
+                    #     if face_locations:
+                    #         print("Face detected in the image.")
                             
-                        else:
-                            print("No face detected in the image.")
+                    #     else:
+                    #         print("No face detected in the image.")
                     # Update the row in the database
                     cursor.execute('''
                         UPDATE people
-                        SET othersummary = ?, otherurl = ?, imageurls = ?
-                        WHERE name = ?;
-                    ''', (final_page_content, final_url, final_image_urls, name))
+                        SET othersummary = %s, otherurl = %s
+                        WHERE name = %s;
+                    ''', (final_page_content, final_url, name))
 
                     # Commit the changes after each update
-                    sqliteConnection.commit()
+                    conn.commit()
 
                     # Save images with the current image index
                     
@@ -144,8 +157,8 @@ def main():
         # Close the connection
         if cursor:
             cursor.close()
-        if sqliteConnection:
-            sqliteConnection.close()
+        if conn:
+            conn.close()
 
 def face_rec():
     for image in os.listdir("/Users/arwaelaradi/Documents/GitHub/QCRI-team/image_directory"):

@@ -22,13 +22,13 @@ cursor.execute('''
 DROP TABLE IF EXISTS people;
 
 CREATE TABLE IF NOT EXISTS people (
-    id varchar(50) PRIMARY KEY,
-    name varchar(50) NOT NULL,
-    url varchar(50) NOT NULL,
+    id varchar(100) PRIMARY KEY,
+    name varchar(100) NOT NULL,
+    url varchar(100) NOT NULL,
     students varchar[],
     advisors varchar[],
-    othersummary varchar(50),
-    otherurl varchar(50),
+    othersummary varchar(2000),
+    otherurl varchar(200),
     imageurls varchar(200)    
 );
 ''')
@@ -81,6 +81,7 @@ def process_url(url, retries=3, delay=5):
             values = (scientist_id, scientist_name, url, students, advisors)
             cursor.execute(sql_query,values)
             conn.commit()
+            t.sleep(0.01)
             break
         except requests.exceptions.Timeout:
             logging.error(f"Timeout error for URL: {url}. Retrying in {delay} seconds...")
@@ -95,17 +96,13 @@ def process_url(url, retries=3, delay=5):
         logging.error(f"Failed to process URL: {url} after {retries} retries.")
         print(f"Failed to process URL: {url} after {retries} retries.")
         timeout_urls.append(url)
-    
-   
-
-
 
 initial_urls = [
     "https://genealogy.math.ndsu.nodak.edu/id.php?id=1",
 ]
     
     # Number of URLs to generate
-num_urls = 30000
+num_urls = 313664
 
 # Get the last URL in the list
 last_url = initial_urls[-1]
@@ -120,8 +117,11 @@ for i in range(1, num_urls ):
     initial_urls.append(new_url)   
 
 # with ThreadPoolExecutor(max_workers=5) as executor:
-MAX_THREADS = 10
+MAX_THREADS = 16
 with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
     futures = [executor.submit(process_url, url) for url in initial_urls]
-
+# for i in timeout_urls:
+#     print(i)
+# for url in initial_urls:
+#     process_url(url)
 print("done")
