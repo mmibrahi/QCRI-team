@@ -1,0 +1,2 @@
+SELECT * FROM public.people
+ORDER BY CAST(id AS INTEGER) ASC;

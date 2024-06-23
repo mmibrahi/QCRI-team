@@ -3,14 +3,19 @@ import sqlite3
 import json
 import requests
 from bs4 import BeautifulSoup
-
-
+import psycopg2
+# ss
 client = Client(host = "http://127.0.0.1:11434")
 
 # generate_text = pipeline(model="databricks/dolly-v2-12b", torch_dtype=torch.bfloat16, trust_remote_code=True, device_map="auto")
 
-sqliteConnection = sqlite3.connect('sql.db')
-cursor = sqliteConnection.cursor()
+conn = psycopg2.connect(dbname="postgres",
+                        user="postgres",
+                        password="1245!Taha",
+                        host="localhost",
+                        port="5432")
+
+cursor = conn.cursor()
 # Query to select all records from the people table
 cursor.execute("""SELECT * FROM people;""")
 # Fetch all results
@@ -23,15 +28,16 @@ people_data = []
 
 for row in results:
     name = row[1]
-    othersummary = row[3]
-    otherurl = row[4]
+    url = row[2]
+    othersummary = row[5]
+    otherurl = row[6]
 
     if othersummary and otherurl:
         # Split the strings back into lists
-        urls = otherurl.split(delimiter)
+        # urls = otherurl.split(delimiter)
         # page_contents = othersummary.split(delimiter)
         # Append the data as a tuple to the people_data list
-        people_data.append((name, urls, othersummary))
+        people_data.append((name,url, otherurl, othersummary))
         # for page in page_contents:
         othersummary = othersummary.replace("\n", " ")
         try:
@@ -48,13 +54,12 @@ for row in results:
                                 Format your response as a json file and save it:
                                 Name: {name}
                                 Birthdate: <birth place and date>
-                                Publication: <short summary of publication>
+                                Publication: <names of publication: summary of publications>
                                 Advisors: <number or list of Advisors>
                                 Descendants: <number or list of Descendants>
                                 Extra information: <additional relevant information>   
 
                                 only display the json format answer, do not display anything before or after the answer:
-             
                                 """
                 response = client.chat(model = "llama3", messages = [{
                     'role': 'user',
@@ -71,4 +76,4 @@ for row in results:
 
 # Close the connection
 cursor.close()
-sqliteConnection.close()
+conn.close()
