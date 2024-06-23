@@ -4,7 +4,7 @@ import json
 import requests
 from bs4 import BeautifulSoup
 import psycopg2
-
+# ss
 client = Client(host = "http://127.0.0.1:11434")
 
 # generate_text = pipeline(model="databricks/dolly-v2-12b", torch_dtype=torch.bfloat16, trust_remote_code=True, device_map="auto")
