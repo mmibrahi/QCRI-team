@@ -4,6 +4,8 @@ import ssl
 # import face_recognition
 import os
 import cv2
+import spacy 
+from rapidfuzz import fuzz
 from bs4 import BeautifulSoup
 from googlesearch import search
 import psycopg2
@@ -57,27 +59,22 @@ def save_images( image_urls ,folder_name="image_directory", start_index=0):
 
 # Function to check if URL meets criteria
 def url_meets_criteria(url, name):
-    name = name.split(" ")
     if "wiki" in url.lower() or "genealogy" in url.lower() or "amazon" in url.lower() or "linkedin" in url.lower() or "facebook" in url.lower() or "twitter" in url.lower() or "instagram" in url.lower():
         return False
     # if "bio" in url.lower() or "edu" in url.lower() or (name[0].lower() in url.lower() and name[-1].lower() in url.lower()):
     #     return True
     return True
 
+# vectorization is used to check similarity between names
 def content_meets_criteria(content, name):
-    # name = name.split(" ")
-    # if content.lower().count(name[0].lower()) >= 2 and content.lower().count(name[-1].lower()) >= 2:
-    #     return True
-    # return False
-    return True
-
-def vect(content, name):
-    name = name.split(" ")
-    firstname = name[0]
-    lastname = name[-1]
-    f1 = content.find(firstname)
-    f2 = content.find(lastname)
-    print(f1, f2)
+    name1 = name.split(" ")
+    f1 = content.find(name1[0])
+    f2 = content.find(name1[-1])
+    name2 = content[f1:f2+len(name1[-1])]
+    similarity = fuzz.ratio(name, name2)
+    print(similarity)
+    if similarity > 80:
+        return True
     
 
 # Connect to the SQLite database
@@ -118,11 +115,11 @@ def main():
                     
                     # Get content and image URLs from the search result URL
                     page_content, img_urls = get_whole_page(url)
-                    vect(page_content, name)
                     if page_content is not None:
-                        page_contents.append(page_content)
-                        image_urls.extend(img_urls)
-                        urls.append(url)
+                        if content_meets_criteria(page_content, name):
+                            page_contents.append(page_content)
+                            image_urls.extend(img_urls)
+                            urls.append(url)
 
                 if page_contents and urls:
                     # Join the page contents and URLs with a delimiter
