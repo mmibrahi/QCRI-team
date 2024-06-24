@@ -56,11 +56,11 @@ def url_meets_criteria(url, name):
     #     return True
     return True
 
-def content_meets_criteria(content, name):
-    name = name.split(" ")
-    if content.lower().count(name[0].lower()) >= 2 and content.lower().count(name[-1].lower()) >= 2:
-        return True
-    return False
+# def content_meets_criteria(content, name):
+#     name = name.split(" ")
+#     if content.lower().count(name[0].lower()) >= 2 and content.lower().count(name[-1].lower()) >= 2:
+#         return True
+#     return False
 
 # Connect to the SQLite database
 def main():
@@ -70,7 +70,7 @@ def main():
         image_urls = []
         urls = []
         # Query to select all records from the people table
-        cursor.execute("SELECT * FROM people2 order by id::INTEGER asc;")
+        cursor.execute("SELECT * FROM people2 ")
 
         # Fetch all results
         results = cursor.fetchall()
@@ -88,7 +88,7 @@ def main():
             count += 1
             print(f"Processing {count}: {name}")
             genology_content,genology_imgs = get_whole_page(row[2])
-            image_urls.extend(genology_imgs)
+            # image_urls.extend(genology_imgs)
             page_contents.append(genology_content)
             # Perform a Google search for the name
             query = f"{name}"
@@ -100,7 +100,7 @@ def main():
                         continue
                     page_content, img_urls = get_whole_page(url)
                     if page_content != None:
-                        if content_meets_criteria(page_content, name):
+                        # if content_meets_criteria(page_content, name):
                             page_contents.append(page_content)
                             image_urls.extend(img_urls)
                         # for image_url in img_urls:
